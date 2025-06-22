@@ -7,7 +7,6 @@ import (
 	"commerce/utils"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -89,7 +88,6 @@ func (uc *UserUseCase) Login(ctx context.Context, loginRequest models.LoginParam
 }
 
 func (uc *UserUseCase) GetUserById(ctx context.Context, userId int64) (*models.User, error) {
-	fmt.Sprintf("halo: %v", userId)
 	user, err := uc.UserService.GetUserByUserId(ctx, userId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

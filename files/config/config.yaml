@@ -1,0 +1,17 @@
+app:
+  port: 9010
+
+db:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: admin
+  name: User
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: root
+
+secret:
+  jwtsecret: "secret"

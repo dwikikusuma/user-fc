@@ -71,9 +71,20 @@ func (uc *UserUseCase) Login(ctx context.Context, loginRequest models.LoginParam
 		return "", errors.New("invalid username or password")
 	}
 
+	currentTime := time.Now()
+	expTime := currentTime.Add(time.Hour * 24)
+
+	// Log the current time and expiration time
+	log.Logger.WithFields(logrus.Fields{
+		"user_id":      user.ID,
+		"current_time": currentTime,
+		"exp_time":     expTime,
+		"exp_unix":     expTime.Unix(), // Log the Unix timestamp of the expiration
+	}).Info("Token created")
+
 	tokenString := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     expTime.Unix(),
 	})
 
 	token, err := tokenString.SignedString([]byte(uc.JwtSecrete))

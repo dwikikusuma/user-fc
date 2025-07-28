@@ -13,6 +13,7 @@ import (
 	"commerce/routes"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"net"
 )
 
@@ -29,18 +30,24 @@ func main() {
 	userUseCase := usecase.NewUserUseCase(*userService, cfg.Secret.JWTSecret)
 	userHandler := handler.NewUserHandler(*userUseCase)
 
-	grpcServer := grpc.NewServer()
-	userpb.RegisterUserServiceServer(grpcServer, &userGrpc.GRPCServer{UserUseCase: *userUseCase})
+	log.Logger.Info("Setting up routes...")
+	routes.SetupRoutes(router, *userHandler, cfg.Secret.JWTSecret)
 
-	lis, _ := net.Listen("tcp", ":50051")
-	err := grpcServer.Serve(lis)
+	//_ = router.Run(":" + port)
+	log.Logger.Info("Server started on port " + port)
+
+	grpcPort := ":5051"
+	lis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
-		return
+		log.Logger.Fatalf("Failed to listen on %s: %v", grpcPort, err)
 	}
 
-	routes.SetupRoutes(router, *userHandler, cfg.Secret.JWTSecret)
-	_ = router.Run(":" + port)
+	grpcServer := grpc.NewServer()
+	userpb.RegisterUserServiceServer(grpcServer, &userGrpc.GRPCServer{UserUseCase: *userUseCase})
+	reflection.Register(grpcServer)
 
-	log.Logger.Info("Server started on port " + port)
-	log.Logger.Info("gRPC server started on port 50051")
+	log.Logger.Infof("gRPC server started on port %s", grpcPort)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Logger.Fatalf("Failed to start gRPC server: %v", err)
+	}
 }
